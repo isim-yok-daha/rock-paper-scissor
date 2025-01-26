@@ -1,0 +1,273 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <title>Animasyonlu Taş Kağıt Makas</title>
+    <link rel="stylesheet" href="style.css">
+    <style>
+    .game-frame {
+    max-width: 600px;
+    margin: 50px auto;
+    padding: 20px;
+    background-color: #f0f0f0; /* Çerçevenin arka plan rengi */
+    border: 5px solid #4CAF50; /* Çerçeve kenarlığı */
+    border-radius: 15px; /* Köşeleri yuvarlatma */
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2); /* Gölgelendirme */
+}
+button {
+    background-color: #d88517; /* Butonun arka plan rengi */
+    color: white; /* Yazı rengi */
+    border: none; /* Kenarlık kaldırılır */
+    padding: 10px 20px; /* İç boşluk */
+    margin: 5px; /* Butonlar arası boşluk */
+    border-radius: 25px; /* Yuvarlak köşeler */
+    font-size: 16px; /* Yazı boyutu */
+    cursor: pointer; /* Üzerine gelince imleç */
+    transition: all 0.3s ease; /* Geçiş animasyonu */
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1); /* Hafif gölge */
+}
+
+button:hover {
+    background-color: #f0c05a; /* Üzerine gelince arka plan rengi */
+    box-shadow: 0 6px 10px rgba(0, 0, 0, 0.2); /* Hover sırasında gölge büyütme */
+    transform: scale(1.05); /* Buton hafif büyüme efekti */
+}
+
+button:active {
+    background-color: #f0c05a;  /* Tıklandığında arka plan rengi */
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2); /* Daha küçük gölge */
+    transform: scale(0.98); /* Hafif küçülme efekti */
+}
+
+        .intro {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: #fff;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 9999;
+        }
+        .intro img {
+            max-width: 80%;
+            max-height: 80%;
+        }
+        .hidden {
+            display: none;
+        }
+        .game-container {
+            display: flex;
+            justify-content: space-around;
+            margin-top: 50px;
+        }
+        .player, .computer {
+            text-align: center;
+        }
+        .hand1 {
+            font-size: 100px;
+            rotate: 90deg;
+            transform: scaleX(-1);
+        }
+        .hand2 {
+            font-size: 100px;
+            rotate: -90deg;
+        }
+        .counting {
+            animation: countingAnimation 1s infinite;
+        }
+        .controls {
+            text-align: center;
+            margin-top: 20px;
+        }
+        .score {
+            text-align: center;
+            font-size: 24px;
+            margin-top: 20px;
+        }
+        @keyframes countingAnimationPlayer {
+    0% { transform: scaleX(-1) translateX(0); }
+    50% { transform: scaleX(-1) translateX(-20px); }
+    100% { transform: scaleX(-1) translate(0); }
+}
+
+@keyframes countingAnimationComputer {
+    0% { transform: translateX(0); }
+    50% { transform: translateX(-20px); }
+    100% { transform: translateX(0); }
+}
+
+.hand1.counting {
+    animation: countingAnimationPlayer 1s infinite; /* Oyuncunun eli yukarı aşağı hareket edecek */
+}
+
+.hand2.counting {
+    animation: countingAnimationComputer 1s infinite; /* Bilgisayarın eli sağa sola hareket edecek */
+}
+
+.selected {
+        background-color: #f0c05a; 
+        color: white;
+        font-weight: bold;
+        border: 2px solid #f0c05a; 
+    }
+
+    </style>
+</head>
+<body >
+    <!-- Intro Görseli -->
+    <div class="intro" id="intro">
+        <img src="assets/intro.png" alt="Intro Görseli">
+    </div>
+
+
+    <div class="game-frame">
+    <!-- Oyun İçeriği -->
+    <div class="score">
+        <span>Oyuncu: <span id="playerScore">0</span></span>
+        <span style="margin: 0 20px;">-</span>
+        <span>Bilgisayar: <span id="computerScore">0</span></span>
+    </div>
+
+    <div class="game-container">
+        <div class="player">
+            <div class="hand1" id="playerHand">✊</div>
+            <h2>Oyuncu</h2>
+        </div>
+        <div class="computer">
+            <div class="hand2" id="computerHand">✊</div>
+            <h2>Bilgisayar</h2>
+        </div>
+    </div>
+
+    <div class="controls">
+        <div style="margin-bottom: 20px;">
+            <button id="round3" onclick="setMaxScore(3)">3 Sayı</button>
+            <button id="round5" onclick="setMaxScore(5)">5 Sayı</button>
+            <button id="round7" onclick="setMaxScore(7)">7 Sayı</button>
+        </div>
+        <div>
+            <button onclick="selectMove('✊')">Taş</button>
+            <button onclick="selectMove('✋')">Kağıt</button>
+            <button onclick="selectMove('✌️')">Makas</button>
+        </div>
+    </div>
+</div>
+    
+    
+    <script>
+        // Intro Görselini Gizle
+        window.onload = () => {
+            const intro = document.getElementById('intro');
+            setTimeout(() => {
+                intro.classList.add('hidden');
+            }, 30); // 3 saniye sonra intro kaybolacak
+        };
+
+        const moves = ['✊', '✋', '✌️'];
+        let count = 0;
+        let playerScore = 0;
+        let computerScore = 0;
+        let maxScore = 3;
+        
+function setMaxScore(score) {
+    maxScore = score;
+    resetGame();
+
+    // Seçilen düğmeye `selected` sınıfını ekle
+    document.getElementById('round3').classList.remove('selected');
+    document.getElementById('round5').classList.remove('selected');
+    document.getElementById('round7').classList.remove('selected');
+
+    // Seçilen düğmeyi vurgula
+    const selectedButton = document.getElementById(`round${score}`);
+    selectedButton.classList.add('selected');
+
+    // Tüm düğmeleri devre dışı bırak
+    document.getElementById('round3').disabled = true;
+    document.getElementById('round5').disabled = true;
+    document.getElementById('round7').disabled = true;
+
+    // Seçilen düğmeyi aktif bırak (görsel vurgulama için)
+    selectedButton.disabled = false;
+}
+
+
+        
+        function resetGame() {
+            playerScore = 0;
+            computerScore = 0;
+            updateScore();
+            document.getElementById('playerHand').textContent = '✊';
+            document.getElementById('computerHand').textContent = '✊';
+        }
+        
+        function updateScore() {
+            document.getElementById('playerScore').textContent = playerScore;
+            document.getElementById('computerScore').textContent = computerScore;
+        }
+        
+        function checkWinner(playerChoice, computerChoice) {
+            if (playerChoice === computerChoice) return 'berabere';
+            if (
+                (playerChoice === '✊' && computerChoice === '✌️') ||
+                (playerChoice === '✋' && computerChoice === '✊') ||
+                (playerChoice === '✌️' && computerChoice === '✋')
+            ) {
+                return 'oyuncu';
+            }
+            return 'bilgisayar';
+        }
+        function resetHand() {
+            document.getElementById('playerHand').textContent = '✊';
+            document.getElementById('computerHand').textContent = '✊';
+        }
+        
+        function selectMove(playerChoice) {
+            resetHand();
+            document.getElementById('round3').click =false;
+            document.getElementById('round5').contentEditable =false;
+            document.getElementById('round7').contentEditable =false;
+            const playerHand = document.getElementById('playerHand');
+            const computerHand = document.getElementById('computerHand');
+            
+            playerHand.classList.add('counting');
+            computerHand.classList.add('counting');
+            
+            let countInterval = setInterval(() => {
+                
+                count++;
+                if (count >= 3) {
+                    clearInterval(countInterval);
+                    
+                    playerHand.classList.remove('counting');
+                    computerHand.classList.remove('counting');
+                    
+                    const computerChoice = moves[Math.floor(Math.random() * 3)];
+                    
+                    playerHand.textContent = playerChoice;
+                    computerHand.textContent = computerChoice;
+                    
+                    const winner = checkWinner(playerChoice, computerChoice);
+                    if (winner === 'oyuncu') playerScore++;
+                    else if (winner === 'bilgisayar') computerScore++;
+                    
+                    updateScore();
+                    
+                    
+                    if (playerScore >= maxScore || computerScore >= maxScore) {
+                        setTimeout(() => {
+                            alert(playerScore > computerScore ? 'Oyuncu Kazandı!' : 'Bilgisayar Kazandı!');
+                            resetGame();
+                        }, 500);
+                    }
+                    
+                    count = 0;
+                }
+            }, 1000);
+        }
+    </script>
+</body>
+</html>
